@@ -1,16 +1,42 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
   <title>Sanavera Bot</title>
 </head>
 <body>
   <h1>Sanavera Bot</h1>
-  <textarea id="userInput" placeholder="Escribí tu mensaje..."></textarea>
-  <button id="sendBtn">Enviar</button>
-  <pre id="response"></pre>
+  <input type="text" id="userInput" placeholder="Escribe tu mensaje">
+  <button onclick="sendMessage()">Enviar</button>
+  <div id="chat"></div>
 
-  <script src="script.js"></script>
+  <script>
+    async function sendMessage() {
+      const input = document.getElementById("userInput");
+      const message = input.value;
+      if (!message) return;
+
+      document.getElementById("chat").innerHTML += `<p><b>Tú:</b> ${message}</p>`;
+      input.value = "";
+
+      try {
+        const res = await fetch("/.netlify/functions/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message })
+        });
+
+        const data = await res.json();
+
+        if (data.reply) {
+          document.getElementById("chat").innerHTML += `<p><b>Bot:</b> ${data.reply}</p>`;
+        } else {
+          document.getElementById("chat").innerHTML += `<p><b>Error:</b> ${data.error}</p>`;
+        }
+      } catch (err) {
+        document.getElementById("chat").innerHTML += `<p><b>Error:</b> ${err.message}</p>`;
+      }
+    }
+  </script>
 </body>
 </html>
