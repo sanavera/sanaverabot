@@ -2,30 +2,29 @@ export async function handler(event) {
   try {
     const { message } = JSON.parse(event.body);
 
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    const apiRes = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
         "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
+        "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "deepseek/deepseek-chat",
-        messages: [
-          { role: "system", content: "Solo respondé sobre temas de seguridad privada y vigilancia" },
-          { role: "user", content: message }
-        ],
-      }),
+        model: "openai/gpt-3.5-turbo",
+        messages: [{ role: "user", content: message }]
+      })
     });
 
-    const data = await response.json();
+    const data = await apiRes.json();
+    const reply = data.choices?.[0]?.message?.content || "No pude responder";
+
     return {
       statusCode: 200,
-      body: JSON.stringify({ reply: data.choices[0]?.message?.content || "No pude responder" }),
+      body: JSON.stringify({ reply })
     };
-  } catch (error) {
+  } catch (err) {
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: error.message }),
+      body: JSON.stringify({ error: err.message })
     };
   }
 }
