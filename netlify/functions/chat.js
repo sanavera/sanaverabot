@@ -10,7 +10,8 @@ export async function handler(event) {
       },
       body: JSON.stringify({
         model: "openai/gpt-3.5-turbo",
-        messages: [{ role: "user", content: message }]
+        messages: [{ role: "system", content: "Solo responde sobre temas de seguridad" },
+                   { role: "user", content: message }]
       })
     });
 
