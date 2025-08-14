@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-<html lang="es">
+<!DOCTYPE html><html lang="es">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -30,7 +29,7 @@
   .msg code{background:#f3f3f3;border:1px solid #e2e2e2;border-radius:4px;padding:0 4px;font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}
   .msg a{color:#115e59;text-decoration:underline}
   .user{margin-left:auto;background:var(--user)}
-  .bot{margin-right:auto;background:var(--bot);max-width:96%} /* bot más ancho */
+  .bot{margin-right:auto;background:var(--bot);max-width:96%}
   .stamp{font-size:11px;opacity:.6;margin-top:4px;text-align:right}
   .input{display:flex;gap:8px;align-items:center;padding:8px;background:#fff;border-top:1px solid var(--border)}
   .input input{flex:1;border:none;font-size:15px;padding:12px 10px;outline:none;background:#fff}
@@ -48,34 +47,23 @@
     <div class="header">
       <img src="https://via.placeholder.com/40" alt="Biji" />
       <div class="title"><strong>Sebastián Sanavera</strong><small>en línea</small></div>
-    </div>
+    </div><div id="msgs" class="msgs"></div>
 
-    <div id="msgs" class="msgs"></div>
-
-    <div class="input">
-      <input id="txt" type="text" placeholder="Escribí tu mensaje…" autocomplete="off" />
-      <button id="send" type="button">Enviar</button>
-    </div>
-  </div>
+<div class="input">
+  <input id="txt" type="text" placeholder="Escribí tu mensaje…" autocomplete="off" />
+  <button id="send" type="button">Enviar</button>
 </div>
 
-<!-- Markdown parser + Sanitizer -->
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
-
-<script>
+  </div>
+</div><!-- Markdown parser + Sanitizer --><script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script><script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script><script>
 // ==================== CONFIG ====================
-const API_URL = 'https://openrouter.ai/api/v1/chat/completions';
+const API_URL = '/.netlify/functions/chat';
 const MODEL   = 'deepseek/deepseek-r1:free'; // gratis
-const API_KEY = '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';       // ⚠️ usá backend/proxy en prod
+// API key removida del cliente: usamos proxy serverless
 
-// PROMPT largo + formato requerido
+// PROMPT largo (sin límites de tokens) — mantiene respuestas breves cuando se pueda
 const systemPrompt = `
 Sos **Sebastián Sanavera**. Español rioplatense (vos). Tono humano y claro. Intentá ser **breve** cuando alcance.
-
-FORMATO OBLIGATORIO:
-- Respondé SIEMPRE en **Markdown** con títulos breves (###), listas con viñetas o numeradas y líneas en blanco entre secciones.
-- Si das ejemplos, separalos con \`---\` y subtítulos.
 
 DOMINIO PERMITIDO (único):
 1) **Seguridad privada en Argentina** (operativa diaria: preguardia, molinete, CCTV, recorridas; comunicación con encargados, libro de novedades, mail/parte; feriados, nocturnidad, turnos; trato con delegados, acceso visitantes y contratistas; buenas prácticas y seguridad física). 
@@ -99,21 +87,10 @@ PROTOCOLO PARA CASOS DE SUELDO ("me pagan mal", etc.):
 marked.setOptions({ breaks:true, gfm:true });
 const ALLOWED_TAGS = ['p','br','strong','b','em','i','ul','ol','li','h3','h4','hr','code','pre','a','blockquote'];
 const ALLOWED_ATTR = { 'a':['href','target','rel'] };
-
-function normalizeMarkdown(md){
-  if(!md) return '';
-  let s = md.trim();
-  // Forzar saltos antes de listas que vienen corridas
-  s = s.replace(/(?<!\n)\s(\d{1,2})[.)]\s/g, '\n$1. '); // 1. 2. 3.
-  s = s.replace(/(?<!\n)\s[-•]\s/g, '\n- ');            // - bullets
-  s = s.replace(/\s+---\s+/g, '\n\n---\n\n');           // separadores
-  // Compactar saltos excesivos
-  s = s.replace(/\n{3,}/g, '\n\n');
-  return s;
-}
 function renderMD(md){
-  const raw = marked.parse(normalizeMarkdown(md));
-  return DOMPurify.sanitize(raw, { ALLOWED_TAGS, ALLOWED_ATTR });
+  const raw = marked.parse(md ?? '');
+  const clean = DOMPurify.sanitize(raw, { ALLOWED_TAGS, ALLOWED_ATTR });
+  return clean;
 }
 
 // ==================== UI helpers ====================
@@ -125,10 +102,12 @@ function stamp(){
   const d=new Date();
   return d.toLocaleTimeString('es-AR', {hour:'2-digit', minute:'2-digit', hour12:true});
 }
+
 function scrollToBottom(){
   const run=()=>{msgsEl.scrollTop = msgsEl.scrollHeight;};
   run(); requestAnimationFrame(run); setTimeout(run, 50); setTimeout(run, 150);
 }
+
 function addBubbleHTML(html, who){
   const row = document.createElement('div'); row.className='row';
   const bubble = document.createElement('div'); bubble.className='msg ' + who;
@@ -137,6 +116,7 @@ function addBubbleHTML(html, who){
   bubble.appendChild(content); bubble.appendChild(time);
   row.appendChild(bubble); msgsEl.appendChild(row); scrollToBottom();
 }
+
 function addBubbleMD(md, who){ addBubbleHTML(renderMD(md), who); }
 
 let typingRow = null;
@@ -157,12 +137,7 @@ async function callLLM(){
   const payload = { model: MODEL, messages: history };
   const res = await fetch(API_URL,{
     method:'POST',
-    headers:{
-      'Authorization': `Bearer ${API_KEY}`,
-      'Content-Type':'application/json',
-      'HTTP-Referer': window.location.origin,
-      'X-Title': 'Sueldo Vigilador Chat'
-    },
+    headers:{ 'Content-Type':'application/json' },
     body: JSON.stringify(payload)
   });
 
@@ -173,7 +148,6 @@ async function callLLM(){
   const choice = data?.choices?.[0] || {}; const msg = choice.message || {};
   let content = msg.content || choice.text || data.response || msg.reasoning || '';
   if (!content || !content.trim()) throw new Error('Sin contenido del modelo');
-
   history.push({ role:'assistant', content });
   return content;
 }
@@ -200,6 +174,5 @@ inputEl.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault()
 
 // Bienvenida
 addBubbleMD('**Listo.** Contame tu caso (seguridad o cálculo de sueldo).','bot');
-</script>
-</body>
+</script></body>
 </html>
