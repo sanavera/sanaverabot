@@ -6,63 +6,56 @@ export async function handler(event) {
       return { statusCode: 400, body: JSON.stringify({ error: "Falta 'message'." }) };
     }
 
-    const GATEWAY_URL = "https://gateway.ai.cloudflare.com/v1/5b577fa788a8fb7277063ac8afc06c28/chat-vigi";
-    // Usa tu variable real en Netlify:
-    const GATEWAY_TOKEN =
-      process.env.CLOUDFLARE_API_TOKEN || process.env.CLOUDFLARE_API_KEY;
+    // ⚙️ Variables de entorno (Netlify → Site settings → Env vars)
+    const CF_ACCOUNT_ID   = process.env.CF_ACCOUNT_ID;     // ej: 5b577fa7...
+    const CF_GATEWAY_ID   = process.env.CF_GATEWAY_ID;     // ej: chat-vigi
+    const CF_WORKERS_TOKEN= process.env.CF_WORKERS_AI_TOKEN; // API token con permiso Workers AI (Read/Edit/Invoke)
+    const CF_AIG_TOKEN    = process.env.CF_AIG_TOKEN;      // (opcional) token del Gateway si activaste “Authenticated Gateway”
 
-    if (!GATEWAY_TOKEN) {
+    if (!CF_ACCOUNT_ID || !CF_GATEWAY_ID || !CF_WORKERS_TOKEN) {
       return {
         statusCode: 200,
-        body: JSON.stringify({ reply: "No hay token (CLOUDFLARE_API_TOKEN) en Netlify." })
+        body: JSON.stringify({
+          reply:
+`Faltan env vars:
+- CF_ACCOUNT_ID
+- CF_GATEWAY_ID
+- CF_WORKERS_AI_TOKEN
+(opcional) CF_AIG_TOKEN`
+        })
       };
     }
 
-    const systemPrompt = `Sos Sebastián, asistente en seguridad privada (AR) y nuestra calculadora de sueldo.
-Respondé corto, humano (tono WhatsApp). No cites leyes salvo que lo pidan.`;
+    const url = `https://gateway.ai.cloudflare.com/v1/${CF_ACCOUNT_ID}/${CF_GATEWAY_ID}/workers-ai/v1/chat/completions`;
 
-    // ⚠️ AI Gateway espera un ARRAY y el token va adentro de headers de cada provider
-    const payload = [
-      {
-        provider: "workers-ai",
-        endpoint: "@cf/meta/llama-3.1-8b-instruct",
-        headers: {
-          "Authorization": `Bearer ${GATEWAY_TOKEN}`,
-          "Content-Type": "application/json"
-        },
-        query: {
-          messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: message }
-          ]
-        }
-      }
-    ];
+    // Prompt del sistema
+    const systemPrompt = `Sos Sebastián, asistente de seguridad privada (Argentina) y calculadora de sueldo.
+Respondé corto, humano (tono WhatsApp). No cites leyes salvo que lo pidan explícitamente.`;
 
-    const resp = await fetch(GATEWAY_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" }, // ← solo content-type global
-      body: JSON.stringify(payload)
-    });
+    const headers = {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${CF_WORKERS_TOKEN}` // ← token de Workers AI
+    };
+    // Si el Gateway está autenticado, manda este header extra:
+    if (CF_AIG_TOKEN) headers["cf-aig-authorization"] = `Bearer ${CF_AIG_TOKEN}`; // ← token del Gateway
 
+    const body = {
+      model: "@cf/meta/llama-3.1-8b-instruct",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: message }
+      ]
+    };
+
+    const resp = await fetch(url, { method: "POST", headers, body: JSON.stringify(body) });
     const data = await resp.json();
 
-    // Extraer texto (cubre formatos del gateway y de workers ai)
-    let reply = null;
-    if (Array.isArray(data) && data.length > 0) {
-      const first = data[0];
-      reply =
-        first?.response?.result?.response ||
-        first?.response?.result?.output_text ||
-        first?.result?.response ||
-        first?.result?.output_text ||
-        null;
-    }
-    if (!reply) {
-      reply = data?.result?.response || data?.result?.output_text || null;
-    }
+    // Workers AI (OpenAI-compat) devuelve choices[0].message.content
+    let reply =
+      data?.choices?.[0]?.message?.content ||
+      data?.result?.response || data?.result?.output_text || null;
 
-    if (!resp.ok || !reply || !String(reply).trim()) {
+    if (!resp.ok || !reply) {
       return {
         statusCode: 200,
         body: JSON.stringify({
