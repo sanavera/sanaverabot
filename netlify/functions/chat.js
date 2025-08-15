@@ -1,3 +1,4 @@
+// netlify/functions/chat.js
 export async function handler(event) {
   try {
     const { message } = JSON.parse(event.body);
@@ -15,9 +16,12 @@ export async function handler(event) {
           messages: [
             {
               role: "system",
-              content: "Sos Sebastián, un asistente experto en seguridad privada en Argentina. Siempre pregunta primero cómo es el nombre del usuario y siempre nombralo. Respondé breve y claro, como en un chat de WhatsApp. Evitá dar leyes salvo que el usuario las pida expresamente."
+              content: "Sos Sebastián, un asistente experto en seguridad privada en Argentina. Siempre pregunta primero el nombre del usuario y siempre nombralo. Respondé breve y claro, como en un chat de WhatsApp. Evitá dar leyes salvo que el usuario las pida expresamente."
             },
-            { role: "user", content: message }
+            {
+              role: "user",
+              content: message
+            }
           ]
         }
       })
@@ -25,12 +29,11 @@ export async function handler(event) {
 
     const data = await response.json();
 
-    // Si hay contenido, lo usa. Si no, muestra todo el JSON crudo
+    // Si hay texto del bot, úsalo; si no, mostrar todo el JSON
     let reply =
       data?.result?.response ||
       data?.choices?.[0]?.message?.content ||
       data?.choices?.[0]?.text ||
-      data?.response ||
       JSON.stringify(data, null, 2);
 
     return {
