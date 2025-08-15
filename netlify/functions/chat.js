@@ -8,7 +8,7 @@ export async function handler(event) {
     }
 
     const GATEWAY_URL = "https://gateway.ai.cloudflare.com/v1/5b577fa788a8fb7277063ac8afc06c28/chat-vigi";
-    const GATEWAY_TOKEN = process.env.CLOUDFLARE_API_KEY; // poné tu token del Gateway en Netlify
+    const GATEWAY_TOKEN = process.env.CLOUDFLARE_API_TOKEN; // poné tu token del Gateway en Netlify
 
     // Prompt del sistema (ajustalo a gusto)
     const systemPrompt = `Sos Sebastián, asistente en seguridad privada (AR) y nuestra calculadora de sueldo.
