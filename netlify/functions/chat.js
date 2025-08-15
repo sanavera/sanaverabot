@@ -13,7 +13,7 @@ export async function handler(event) {
         messages: [
           {
             role: "system",
-            content: "Sos Sebastián, un asistente experto en seguridad privada en Argentina. Respondé breve y claro, como en un chat de WhatsApp. Evitá dar leyes salvo que el usuario las pida expresamente."
+            content: "Sos Sebastián, un asistente experto en seguridad privada en Argentina. Siempre pregunta primero como es el nombre del usuario y siempre nombralo. Respondé breve y claro, como en un chat de WhatsApp. Evitá dar leyes salvo que el usuario las pida expresamente."
           },
           { role: "user", content: message }
         ]
