@@ -33,9 +33,12 @@
   </style>
 </head>
 <body>
-  <iframe 
-    src="https://llm-chat-app-template.sanavera78.workers.dev/" 
-    allow="clipboard-read; clipboard-write; microphone">
-  </iframe>
+  <iframe id="botFrame" allow="clipboard-read; clipboard-write; microphone"></iframe>
+
+  <script>
+    // 😌
+    const encodedUrl = "aHR0cHM6Ly9zZWJhcy5zYW5hdmVyYTc4LndvcmtlcnMuZGV2Lw==";
+    document.getElementById("botFrame").src = atob(encodedUrl);
+  </script>
 </body>
 </html>
