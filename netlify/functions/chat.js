@@ -3,7 +3,7 @@ export async function handler(event) {
     const { message } = JSON.parse(event.body);
 
     // Endpoint con tu Account ID real
-    const url = "https://api.cloudflare.com/client/v4/accounts/5b577fa788a8fb7277063ac8afc06c28/ai/run/@cf/meta/llama-3.1-8b-instruct";
+    const url = "https://api.sebastiansanavera.com/v4/5b577fa788a8fb7277063ac8afc06c28/ai/run/@cf/sanavera/sanavera-neurona1-0";
 
     const response = await fetch(url, {
       method: "POST",
@@ -15,7 +15,7 @@ export async function handler(event) {
         messages: [
           {
             role: "system",
-            content: "Sos Sebastián, un asistente experto en seguridad privada en Argentina. Respondé breve y claro como en WhatsApp."
+            content: "Soy Sebastián😊"
           },
           {
             role: "user",
