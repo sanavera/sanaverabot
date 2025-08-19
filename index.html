@@ -5,14 +5,14 @@
   <title>Vigilador Asistente</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-  <!-- Metadatos para vista previa (WhatsApp, Facebook, etc.) -->
+  <!-- Metadatos para vista previa -->
   <meta property="og:title" content="Vigilador Asistente">
   <meta property="og:description" content="Tu asistente de seguridad privada en Argentina.">
   <meta property="og:image" content="https://raw.githubusercontent.com/sanavera/sueldo-vigilador-web/e56b8f31e02d535f0f67fa085c2a91e10909651f/ic_launcher.png">
-  <meta property="og:url" content="https://tusitio.netlify.app/">
+  <meta property="og:url" content="https://sanaverabot.netlify.app/">
   <meta name="twitter:card" content="summary_large_image">
 
-  <!-- Ícono de la pestaña -->
+  <!-- Ícono -->
   <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/sanavera/sueldo-vigilador-web/e56b8f31e02d535f0f67fa085c2a91e10909651f/ic_launcher.png">
 
   <style>
@@ -21,22 +21,28 @@
       padding: 0;
       height: 100%;
       width: 100%;
-      background: #ece5dd; /* color de fondo tipo WhatsApp */
+      background: #ece5dd;
       overflow: hidden;
     }
     iframe {
       width: 100%;
       height: 100%;
-      border: none;
+      border: 0;
       display: block;
     }
   </style>
 </head>
 <body>
-  <iframe id="botFrame" allow="clipboard-read; clipboard-write; microphone"></iframe>
+  <!-- IMPORTANTE: permisos para reproducir audio/video dentro del frame hijo -->
+  <iframe
+    id="botFrame"
+    allow="autoplay; encrypted-media; picture-in-picture; fullscreen; clipboard-read; clipboard-write; microphone"
+    allowfullscreen
+    referrerpolicy="no-referrer"
+  ></iframe>
 
   <script>
-    // 😌
+    // URL del bot (base64)
     const encodedUrl = "aHR0cHM6Ly9sbG0tY2hhdC1hcHAtdGVtcGxhdGUuc2FuYXZlcmE3OC53b3JrZXJzLmRldi8=";
     document.getElementById("botFrame").src = atob(encodedUrl);
   </script>
